@@ -61,7 +61,7 @@ app.delete("/api/persons/:id", (req, res) => {
   const personindex = phonebook.indexOf(person)
 
   if(person) {
-    delete phonebook[personindex]
+    phonebook[personindex] = { "null":null }
     res.status(204).end()
   } else {
     res.status(404).end()
