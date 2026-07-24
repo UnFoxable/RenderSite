@@ -6,11 +6,9 @@ const contact = require('./model-contact')
 const app = express()
 
 morgan.token('body', function (req, res) {
-  if(req.body) {
-    return `{ "name":${req.body.name}, "number":${req.body.number} }`
-  } else {
-    return null
-  }
+  if(req.body)
+    { return `{ "name":${req.body.name}, "number":${req.body.number} }` }
+  else { return null }
 })
 
 app
@@ -59,22 +57,18 @@ app.delete("/api/persons/:id", (req, res, next) => {
 })
 
 // Create contact
-app.post("/api/persons", (req, res) => {
-  const person = req.body
-
-  if(!person.name || !person.number || person.id)
-    { res.status(400).send({error : "bad format"}).end() }
-  // else if(contact.find(x => {x.id === person.id})) {
-  //   res.status(400).send({error : "name must be unique"}).end()
-  // }
+app.post("/api/persons", (req, res, next) => {
+  const { name, number } = req.body
 
   const newPerson = new contact({
-    "name":person.name,
-    "number":person.number,
+    "name":name,
+    "number":number,
   })
+
   newPerson
     .save()
     .then(newContact => { res.status(200).json(newContact) })
+    .catch(error => next(error))
 
 })
 
@@ -92,6 +86,7 @@ app.patch("/api/persons/:id", (req, res, next) => {
           "name":name,
           "number":number,
         })
+
         newPerson
           .save()
           .then(newContact => { res.json(newContact) })
@@ -118,8 +113,10 @@ const errorHandler = (error, req, res, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError')
-    { return res.status(400).send({ error: 'malformatted id' }) }
-  else { return res.status(400).send({ error: 'undefined error' }) }
+    { return res.status(400).json({ error: 'malformatted id' }) }
+  else if (error.name === 'Validation')
+    { return res.status(400).json({ error: error.message }) }
+  else { return res.status(400).send({ error: error.message }) }
 
   next(error)
 }
